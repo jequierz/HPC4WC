@@ -131,17 +131,25 @@ contains
         do iter = 1, num_iter
                     
             call update_halo( in_field )
-        
+			! allocate subdomains -> write function 
+			
+			! work in parallel from here 
+			!Every rank fill a shared out_field
+			!tmp1_field (same size as the subdomain) is private. 
+			!2 layers of halo to be able to update the first halo layer to calculate laplap
+			! Laplap : shared -> copy every subdomains except halos 
+			!next step : update halos 
+			
             do k = 1, nz
 
-                do j = 1 + num_halo - 1, ny + num_halo + 1
+                do j = 1 + num_halo - 1, ny + num_halo + 1 ! first layer of halo already taken into account 
                 do i = 1 + num_halo - 1, nx + num_halo + 1
                     tmp1_field(i, j) = -4._wp * in_field(i, j, k)        &
                         + in_field(i - 1, j, k) + in_field(i + 1, j, k)  &
                         + in_field(i, j - 1, k) + in_field(i, j + 1, k)
                 end do
-                end do
-
+                end do			 
+				
                 do j = 1 + num_halo, ny + num_halo
                 do i = 1 + num_halo, nx + num_halo
                 
@@ -159,6 +167,8 @@ contains
                 end do
 
             end do
+			! end working in parallel 
+			
         end do
             
     end subroutine apply_diffusion
